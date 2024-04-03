@@ -22,7 +22,6 @@ Add the correct DNS entry: go to [Cloudflare dashboard](https://dash.cloudflare.
 ![Example CNAME](https://raw.githubusercontent.com/HttpRafa/modflared/multi/latest/.github/images/dns_cname.png)
 ![Example TXT](https://raw.githubusercontent.com/HttpRafa/modflared/multi/latest/.github/images/dns_txt.png)
 
-# Versions 1.0.0 and onward
 ### For Players
 If your server admin has properly configured their server you should be able to connect to the server as usual. 
 No extra configuration is needed.
@@ -41,27 +40,3 @@ For the hostname that you want your players to connect to (eg. `example.domain.n
 - `cloudflared-use-tunnel` - This will make modflared connect to the tunnel on the hostname itself (eg. `example.domain.net`)
 - `cloudflared-route=<route>` - This will make modflared connect to the tunnel under the hostname of `<route>`. 
 (ex. setting `cloudflared-route=example2.domain.net` will make modflared connect to the tunnel on `example2.domain.net` instead of `example.domain.net`)
-
-# Versions below 1.0.0
-### For Players
-To give the mod information about the tunnel, you have to create a folder called "modflared" in the Minecraft folder. A file called "access.json" must then be created in this folder.
-#### Example configuration (access.json)
-```JSON
-[
-  {
-    "use": true,
-    "protocol": "tcp",
-    "hostname": "example.domain.net",
-    "bind": {
-      "host": "127.0.0.1",
-      "port": 25565
-    }
-  }
-]
-```
-#### Connect to the server
-After you have set everything up with the access.json, you can connect to the server via the tunnel. Enter 127.0.0.1 and the port that is in the access.json (in the example 25565) into minecraft and click connect.
-![Minecraft Join](https://raw.githubusercontent.com/HttpRafa/modflared/multi/latest/.github/images/minecraft_localhost_connect.png)
-
-### Server Admins (Setting Up cloudflared)
-On the server side, you only need to install Cloudflared as described above in the “Configuring Cloudflared” part.
