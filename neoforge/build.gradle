@@ -2,12 +2,14 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 import java.nio.file.Files
 
 plugins {
     id "com.github.johnrengelman.shadow" version "7.1.2"
     id "com.modrinth.minotaur" version "2.+"
+    id 'net.darkhax.curseforgegradle' version '1.1.15'
 }
 
 architectury {
@@ -56,7 +58,7 @@ processResources {
 // Configure the modrinth publication
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
-    projectId = "${mod_project_id}"
+    projectId = "${modrinth_project_id}"
     versionNumber = "${version}+${minecraft_version}"
     versionName = "${version} for ${minecraft_version}"
     versionType = "${mod_version_type}"
@@ -68,6 +70,20 @@ modrinth {
 }
 
 tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
+
+// Configure the curseforge publication
+tasks.register('publishCurseForge', TaskPublishCurseForge) {
+    apiToken = System.getenv("CURSEFORGE_TOKEN")
+
+    // The main file to upload
+    def mainFile = upload(curseforge_project_id, remapJar)
+    mainFile.displayName = "${version} for ${minecraft_version}"
+    mainFile.releaseType = mod_version_type
+    mainFile.changelog = generateChangelog()
+    mainFile.changelogType = 'markdown'
+    mainFile.addGameVersion(minecraft_version)
+    mainFile.addModLoader("neoforge")
+}
 
 shadowJar {
     exclude "fabric.mod.json"
