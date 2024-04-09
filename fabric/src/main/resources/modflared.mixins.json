@@ -6,6 +6,7 @@
   "client": [
   ],
   "mixins": [
+    "ConnectScreenThreadRunMixin"
   ],
   "injectors": {
     "defaultRequire": 1

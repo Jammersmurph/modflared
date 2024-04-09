@@ -10,7 +10,6 @@
   ],
   "mixins": [
     "ClientConnectionMixin",
-    "ConnectScreen1Mixin",
     "ConnectScreenMixin"
   ],
   "injectors": {
