@@ -15,6 +15,7 @@ import net.minecraft.client.toast.SystemToast;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +24,15 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class TunnelManager {
 
@@ -44,10 +49,10 @@ public class TunnelManager {
 
     public RunningTunnel createTunnel(String host) {
         var binary = this.cloudflared.get();
-        if(binary != null) {
+        if (binary != null) {
             Modflared.LOGGER.info("Starting tunnel to {}", host);
             var process = binary.createTunnel(RunningTunnel.Access.localWithRandomPort(host));
-            if(process == null) return null;
+            if (process == null) return null;
             this.runningTunnels.add(process);
             return process;
         } else {
@@ -67,19 +72,34 @@ public class TunnelManager {
         }
     }
 
-    /*
-     Check the TXT records for the server to see if it should use a tunnel
-     We check for a TXT record on the same subdomain as the server we are connecting to
-     This is done by checking if the server has a TXT record with the value "cloudflared-use-tunnel" or "cloudflared-route=<route>"
-     If the server has the TXT record "cloudflared-route=<route>", it will use the route as the route for the tunnel
-     If the server has the TXT record "cloudflared-use-tunnel", it will use the server address as the route for the tunnel
-     If the server has neither of the TXT records, it will not use a tunnel (unless it is in the forced tunnels list)
+    /**
+     * Check the TXT records for the server to see if it should use a tunnel We check for a TXT record on the same subdomain as
+     * the server we are connecting to.
+     * <p>
+     * This is done by checking if the server has a TXT record with the value "cloudflared-use-tunnel" or
+     * "cloudflared-route=<route>"
+     * <li>
+     * If the server has the TXT record "cloudflared-route=<route>", it will use the route as the route for the tunnel.
+     * </li>
+     * <li>
+     * If the server has the TXT record "cloudflared-use-tunnel", it will use the server address as the route for the tunnel
+     * </li>
+     * <li>
+     * If the server has neither of the TXT records, it will not use a tunnel (unless it is in the forced tunnels list)
+     * </li>
+     *
+     * @return The route to use for the tunnel, or null if the tunnel should not be used
+     * @throws IOException If an error occurs while resolving the DNS TXT records
      */
-    public String shouldUseTunnel(String host) throws IOException {
+    public @Nullable String shouldUseTunnel(String host) throws IOException {
         if (forcedTunnels.stream().anyMatch(serverAddress -> serverAddress.getAddress().equalsIgnoreCase(host))) {
             return host;
         }
 
+        // Check if the host is an IP address
+        if (!isHost(host)) {
+            return null;
+        }
         try {
             var properties = new Properties();
             properties.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
@@ -116,9 +136,26 @@ public class TunnelManager {
         return null;
     }
 
+    /**
+     * @param ip The IP address or hostname
+     * @return Whether the string is a hostname
+     * @see <a href="https://stackoverflow.com/a/57612280">How do you tell whether a string is an IP or a hostname</a>
+     */
+    private boolean isHost(String ip) {
+        if (ip.strip().equalsIgnoreCase("localhost")) return false;
+        try {
+            InetAddress[] ips = InetAddress.getAllByName(ip);
+            // #getAllByName will return an InetAddress that is the same as the input if it is an IP address,
+            // so we can check if the input is an IP address by comparing the InetAddress to the input
+            return !(ips.length == 1 && ips[0].getHostAddress().equals(ip));
+        } catch (UnknownHostException e) {
+            return true;
+        }
+    }
+
     public void prepareConnection(@NotNull TunnelStatus status, ClientConnection connection) {
         var tunnelConnection = (IClientConnection) connection;
-        if(status.runningTunnel() != null) {
+        if (status.runningTunnel() != null) {
             tunnelConnection.setRunningTunnel(status.runningTunnel());
         }
     }
@@ -143,11 +180,11 @@ public class TunnelManager {
 
     public void prepareBinary() {
         CloudflaredVersion.create().whenComplete((version, throwable) -> {
-            if(throwable != null) {
+            if (throwable != null) {
                 Modflared.LOGGER.error(throwable.getMessage(), throwable);
             } else {
                 version.prepare().whenComplete((unused, throwable1) -> {
-                    if(throwable1 != null) {
+                    if (throwable1 != null) {
                         Modflared.LOGGER.error(throwable1.getMessage(), throwable1);
                         displayErrorToast();
                     } else {
