@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
@@ -31,7 +32,7 @@ public class GithubAPI {
 
     static {
         try {
-            GITHUB_API_ENDPOINT = new URL("https://api.github.com/repos/" + GITHUB_USER + "/" + GITHUB_REPOSITORY + "/releases/latest");
+            GITHUB_API_ENDPOINT = URI.create("https://api.github.com/repos/" + GITHUB_USER + "/" + GITHUB_REPOSITORY + "/releases/latest").toURL();
         } catch (MalformedURLException exception) {
             Modflared.LOGGER.error("Failed to create url object of github endpoint.", exception);
         }
