@@ -161,6 +161,11 @@ public class TunnelManager {
     }
 
     public TunnelStatus handleConnect(@NotNull InetSocketAddress address) {
+        if(this.cloudflared.get() == null) {
+            Modflared.LOGGER.warn("Modflared is not ready yet, ignoring all connections.");
+            return new TunnelStatus(null, TunnelStatus.State.DONT_USE);
+        }
+
         RunningTunnel runningTunnel = null;
         TunnelStatus.State state = TunnelStatus.State.DONT_USE;
 
