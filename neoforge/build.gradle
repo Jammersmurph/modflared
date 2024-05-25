@@ -50,7 +50,7 @@ def replacements = [
 processResources {
     inputs.properties(replacements)
 
-    filesMatching("META-INF/mods.toml") {
+    filesMatching("META-INF/neoforge.mods.toml") {
         expand replacements
     }
 }
