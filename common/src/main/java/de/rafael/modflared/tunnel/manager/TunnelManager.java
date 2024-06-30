@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import de.rafael.modflared.Modflared;
 import de.rafael.modflared.ModflaredPlatform;
-import de.rafael.modflared.download.CloudflaredVersion;
+import de.rafael.modflared.binary.Cloudflared;
 import de.rafael.modflared.interfaces.mixin.IClientConnection;
 import de.rafael.modflared.tunnel.RunningTunnel;
 import de.rafael.modflared.tunnel.TunnelStatus;
@@ -28,11 +28,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public class TunnelManager {
 
@@ -42,7 +40,7 @@ public class TunnelManager {
 
     public static final Logger CLOUDFLARE_LOGGER = LoggerFactory.getLogger("Cloudflared");
 
-    private final AtomicReference<CloudflaredVersion> cloudflared = new AtomicReference<>();
+    private final AtomicReference<Cloudflared> cloudflared = new AtomicReference<>();
     private final List<ServerAddress> forcedTunnels = new ArrayList<>();
 
     private final List<RunningTunnel> runningTunnels = new ArrayList<>();
@@ -184,7 +182,7 @@ public class TunnelManager {
     }
 
     public void prepareBinary() {
-        CloudflaredVersion.create().whenComplete((version, throwable) -> {
+        Cloudflared.create().whenComplete((version, throwable) -> {
             if (throwable != null) {
                 Modflared.LOGGER.error(throwable.getMessage(), throwable);
             } else {

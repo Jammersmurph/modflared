@@ -9,7 +9,7 @@ package de.rafael.modflared.tunnel;
 //------------------------------
 
 import de.rafael.modflared.Modflared;
-import de.rafael.modflared.download.CloudflaredVersion;
+import de.rafael.modflared.binary.Cloudflared;
 import de.rafael.modflared.tunnel.manager.TunnelManager;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -17,29 +17,23 @@ import org.lwjgl.system.Platform;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 public record RunningTunnel(Access access, Process process) {
 
-    public static @NotNull CompletableFuture<RunningTunnel> createTunnel(@NotNull CloudflaredVersion binary, @NotNull Access access) {
+    public static @NotNull CompletableFuture<RunningTunnel> createTunnel(@NotNull Cloudflared binary, @NotNull Access access) {
         var future = new CompletableFuture<RunningTunnel>();
         Modflared.EXECUTOR.execute(() -> {
             try {
-                var command = access.command(binary.createBinaryRef());
-                Modflared.LOGGER.info(Arrays.toString(command).replace(",",""));
-                if (Platform.get() == Platform.WINDOWS) {
-                    command[0] = "\"" + TunnelManager.DATA_FOLDER.getAbsolutePath() + "\\" + command[0] + "\"";
-                }
-                ProcessBuilder processBuilder = new ProcessBuilder(command);
+                ProcessBuilder processBuilder = new ProcessBuilder(binary.buildCommand(access));
                 // Since LINUX, MACOSX, and WINDOWS are the only options, this will work to only set the directory for Linux and MacOS
                 if (Platform.get() != Platform.WINDOWS) {
                     processBuilder.directory(TunnelManager.DATA_FOLDER);
                 }
                 processBuilder.redirectErrorStream(true);
-                Process process = processBuilder.start();
+                var process = processBuilder.start();
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                var reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -68,9 +62,8 @@ public record RunningTunnel(Access access, Process process) {
             return new Access("tcp", host, new InetSocketAddress("127.0.0.1", (int) (Math.random() * 10000 + 25565)));
         }
 
-        @Contract("_ -> new")
-        public String @NotNull [] command(@NotNull File executable) {
-            return new String[] {(Platform.get() != Platform.WINDOWS ? "./" : "") + executable.getName(), "access", protocol, "--hostname", hostname, "--url", tunnelAddress.getHostString() + ":" + tunnelAddress.getPort()};
+        public String @NotNull [] command(@NotNull String fileName, boolean prefix) {
+            return new String[] {(prefix && Platform.get() != Platform.WINDOWS ? "./" : "") + fileName, "access", protocol, "--hostname", hostname, "--url", tunnelAddress.getHostString() + ":" + tunnelAddress.getPort()};
         }
     }
 

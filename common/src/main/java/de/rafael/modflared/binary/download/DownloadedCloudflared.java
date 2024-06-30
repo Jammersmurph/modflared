@@ -1,4 +1,4 @@
-package de.rafael.modflared.download;
+package de.rafael.modflared.binary.download;
 
 //------------------------------
 //
@@ -9,6 +9,7 @@ package de.rafael.modflared.download;
 //------------------------------
 
 import de.rafael.modflared.Modflared;
+import de.rafael.modflared.binary.Cloudflared;
 import de.rafael.modflared.github.GithubAPI;
 import de.rafael.modflared.tunnel.RunningTunnel;
 import de.rafael.modflared.tunnel.manager.TunnelManager;
@@ -22,43 +23,35 @@ import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
-public class CloudflaredVersion {
+public class DownloadedCloudflared extends Cloudflared {
 
     private final CloudflaredDownload download;
-    private volatile String version;
 
     private static final File VERSION_FILE = new File(TunnelManager.DATA_FOLDER, "version.json");
 
     private static final String GITHUB_DOWNLOAD_ENDPOINT = "https://github.com/cloudflare/cloudflared/releases/download/";
 
-    public CloudflaredVersion(CloudflaredDownload download, String version) {
-        this.version = version;
+    public DownloadedCloudflared(CloudflaredDownload download, String version) {
+        super(version);
         this.download = download;
     }
 
-    public static CompletableFuture<CloudflaredVersion> create() {
+    public static CompletableFuture<Cloudflared> tryCreate() {
         if(VERSION_FILE.exists()) {
             try {
-                var version = Modflared.GSON.fromJson(new InputStreamReader(new FileInputStream(VERSION_FILE)), CloudflaredVersion.class);
+                var version = Modflared.GSON.fromJson(new InputStreamReader(new FileInputStream(VERSION_FILE)), DownloadedCloudflared.class);
                 if(version != null) return CompletableFuture.completedFuture(version);
             } catch (Throwable throwable) {
                 Modflared.LOGGER.error("Failed to load existing version file creating new one...", throwable);
             }
         }
-        return GithubAPI.requestLatestVersion().thenApply(latestVersion -> new CloudflaredVersion(CloudflaredDownload.find(), latestVersion));
+        return GithubAPI.requestLatestVersion().thenApply(latestVersion -> new DownloadedCloudflared(CloudflaredDownload.find(), latestVersion));
     }
 
-    public @Nullable RunningTunnel createTunnel(RunningTunnel.Access access) {
-        try {
-            return RunningTunnel.createTunnel(this, access).get();
-        } catch (Exception exception) {
-            Modflared.LOGGER.error("Failed to create tunnel", exception);
-            return null;
-        }
-    }
-
+    @Override
     public CompletableFuture<Void> prepare() {
         if(isInstalled()) {
             CompletableFuture<Void> completableFuture = new CompletableFuture<>();
@@ -86,6 +79,16 @@ public class CloudflaredVersion {
         } else {
             return downloadAndSaveInfo();
         }
+    }
+
+    @Override
+    public String[] buildCommand(RunningTunnel.@NotNull Access access) {
+        var command = access.command(createBinaryRef().getName(), true);
+        Modflared.LOGGER.info(Arrays.toString(command).replace(",",""));
+        if (Platform.get() == Platform.WINDOWS) {
+            command[0] = "\"" + TunnelManager.DATA_FOLDER.getAbsolutePath() + "\\" + command[0] + "\"";
+        }
+        return command;
     }
 
     private CompletableFuture<Void> downloadAndSaveInfo() {

@@ -1,4 +1,4 @@
-package de.rafael.modflared.download;
+package de.rafael.modflared.binary.download;
 
 import org.jetbrains.annotations.NotNull;
 
