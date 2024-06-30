@@ -21,7 +21,7 @@ subprojects {
         // The following line declares the yarn mappings you may select this one as well.
         mappings loom.layered {
             it.mappings("net.fabricmc:yarn:${rootProject.yarn_version}:v2")
-            it.mappings("dev.architectury:yarn-mappings-patch-neoforge:1.20.5+build.3")
+            it.mappings("dev.architectury:yarn-mappings-patch-neoforge:${rootProject.yarn_mappings_patch}")
         }
     }
 }

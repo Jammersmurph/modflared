@@ -28,7 +28,7 @@ public abstract class ServerEntryMixin {
     @Shadow @Final private MultiplayerScreen screen;
 
     @Unique
-    private static final Identifier MODFLARED_INDICATOR_TEXTURE = new Identifier(Modflared.MOD_ID, "textures/gui/indicator.png");
+    private static final Identifier MODFLARED_INDICATOR_TEXTURE = Identifier.of(Modflared.MOD_ID, "textures/gui/indicator.png");
 
     @Inject(method = "render", at = @At("TAIL"))
     public void render(@NotNull DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta, CallbackInfo ci) {
