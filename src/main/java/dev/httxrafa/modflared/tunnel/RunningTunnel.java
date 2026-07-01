@@ -21,6 +21,7 @@ public record RunningTunnel(Access access, Process process) {
                 ProcessBuilder processBuilder = new ProcessBuilder(binary.buildCommand(access));
                 // Since LINUX, MACOSX, and WINDOWS are the only options, this will work to only set the directory for Linux and MacOS
                 if (Platform.get() != Platform.WINDOWS) {
+                    TunnelManager.DATA_FOLDER.mkdirs();
                     processBuilder.directory(TunnelManager.DATA_FOLDER);
                 }
                 processBuilder.redirectErrorStream(true);
