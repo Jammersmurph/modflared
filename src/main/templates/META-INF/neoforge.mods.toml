@@ -19,13 +19,13 @@ config="${mod_id}.mixins.json"
 [[dependencies.${mod_id}]]
     modId="neoforge" #mandatory
     type="required" #mandatory
-    versionRange="[${neo_version},)" #mandatory
+    versionRange="[20.4,)" #mandatory
     ordering="NONE"
     side="CLIENT"
 
 [[dependencies.${mod_id}]]
     modId="minecraft"
     type="required"
-    versionRange="${minecraft_version_range}"
+    versionRange="[1.21.1,1.22)"
     ordering="NONE"
     side="CLIENT"
