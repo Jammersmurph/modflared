@@ -9,7 +9,7 @@ jobs:
       matrix:
         # Use these Java versions
         java: [
-          25,    # Current Java LTS & minimum supported by Minecraft
+          21,    # Java 21 LTS - matches Minecraft 1.21.1 requirements
         ]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
